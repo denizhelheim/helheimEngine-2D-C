@@ -1,15 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
-#define widht 16
-#define height 16
 
-int playerX = 1;
-int playerY = 1;
+#define widht 16 // GAME MAP WIDTH
+#define height 16 // GAME MAP HEIGHT
 
-char map[widht][height]; // GAME MAP
+int playerX = 1; // PLAYER STARTING X POSITION
+int playerY = 1; // PLAYER STARTING Y POSITION
 
-void DrawMap() {
+char map[widht][height]; // GAME MAP ARRAY
+
+void DrawMap() { // FUNCTION TO DRAW THE GAME MAP
     system("cls");
 
     for (int y = 0; y < height; y++) {
@@ -24,43 +25,48 @@ void DrawMap() {
     }
 }
 
-void UpdateMap() {
+void UpdateMap() { // FUNCTION TO UPDATE THE GAME MAP
     DrawMap();
 }
 
-void MovePlayer() {
+void MovePlayer() { // FUNCTION TO MOVE THE PLAYER
     char input = getch();
 
     switch (input) {
         case 'w':
-            playerY--;
-            UpdateMap();
+            if (playerY > 0) {
+                playerY--;
+                UpdateMap();
+            }
             break;
         case 's':
-            playerY++;
-            UpdateMap();
+            if (playerY < height - 1) {
+                playerY++;
+                UpdateMap();
+            }
             break;
         case 'a':
-            playerX--;
-            UpdateMap();
+            if (playerX > 0) {
+                playerX--;
+                UpdateMap();
+            }
             break;
         case 'd':
-            playerX++;
-            UpdateMap();
+            if (playerX < widht - 1) {
+                playerX++;
+                UpdateMap();
+            }
             break;
     }
 }
 
-int main() {
+int main() { // MAIN FUNCTION
     DrawMap();
-
-
     while (1) {
         MovePlayer();
     }
 
-
-
+    
 
 
 
