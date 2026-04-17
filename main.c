@@ -8,10 +8,21 @@
 int playerX = 1; // PLAYER STARTING X POSITION
 int playerY = 1; // PLAYER STARTING Y POSITION
 
-int wallX = 5; // WALL X POSITION
-int wallY = 5; // WALL Y POSITION
+char map[height][widht]; // GAME MAP ARRAY
 
-char map[widht][height]; // GAME MAP ARRAY
+void InitializeMap() { // FUNCTION TO INITIALIZE THE MAP
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < widht; x++) {
+            map[y][x] = '.';
+        }
+    }
+    // PLACE WALLS ON MAP -- YOU CAN CHANGE THESE POSITIONS TO CREATE DIFFERENT WALLS
+    map[5][5] = '#';
+    map[7][7] = '#';
+    map[3][8] = '#';
+    map[10][3] = '#';
+    map[12][12] = '#';
+}
 
 void DrawMap() { // FUNCTION TO DRAW THE GAME MAP
     system("cls");
@@ -20,10 +31,8 @@ void DrawMap() { // FUNCTION TO DRAW THE GAME MAP
         for (int x = 0; x < widht; x++) {
             if (x == playerX && y == playerY) {
                 printf("P");
-            } else if (x == wallX && y == wallY) {
-                printf("#");
             } else {
-                printf(".");
+                printf("%c", map[y][x]);
             }
         }
         printf("\n");
@@ -35,7 +44,7 @@ void UpdateMap() { // FUNCTION TO UPDATE THE GAME MAP
 }
 
 int IsWall(int x, int y) { // FUNCTION TO CHECK IF POSITION IS A WALL
-    return (x == wallX && y == wallY);
+    return (map[y][x] == '#');
 }
 
 void MovePlayer() { // FUNCTION TO MOVE THE PLAYER
@@ -70,15 +79,11 @@ void MovePlayer() { // FUNCTION TO MOVE THE PLAYER
 }
 
 int main() { // MAIN FUNCTION
+    InitializeMap();
     DrawMap();
     while (1) {
         MovePlayer();
     }
-
-
-
-
-
 
     return 0;
 }
