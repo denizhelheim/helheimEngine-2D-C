@@ -123,6 +123,12 @@ GameState gameState = STATE_MENU;
 GameConfig gameConfig = {DIFFICULTY_NORMAL, 0, 1, 1, 0};
 int gameTick = 0;
 
+// Console buffers for flicker-free rendering
+char screenBuffer[HEIGHT][WIDTH];
+char prevScreenBuffer[HEIGHT][WIDTH];
+int consoleInitialized = 0;
+int screenCleared = 0;
+
 // Map and tile system
 char map[HEIGHT][WIDTH];
 TileData tileMap[HEIGHT][WIDTH];
@@ -147,6 +153,10 @@ int won = 0;
 int levelTime = 0;
 int starsCollected = 0;
 int totalStars = 0;
+int lastDisplayedScore = -1;
+int lastDisplayedHealth = -1;
+int lastDisplayedStars = -1;
+int lastDisplayedTime = -1;
 
 // Frame timing
 const int TARGET_FPS = 20;
@@ -162,6 +172,9 @@ int inventoryCount = 0;
 // Forward declarations
 void UpdateEnemyAI(Entity* enemy);
 void EmitParticle(float x, float y, char displayChar, float velX, float velY, int lifetime);
+void SetCursorPosition(int x, int y);
+void HideCursor(void);
+void ClearGameScreen(void);
 
 void InitializeEntity(Entity* entity) {
     entity->active = 0;
@@ -542,6 +555,7 @@ void LoadDefaultLevel() {
     health = maxHealth;
     starsCollected = 0;
     totalStars = 0;
+    screenCleared = 0;  // Reset for fresh level
     
     InitializeDefaultMap();
     
@@ -555,68 +569,121 @@ void LoadDefaultLevel() {
 // ===== RENDERING =====
 
 void DrawGameUI() {
-    printf("\n");
-    printf("╔════════════════════════════════════════╗\n");
-    printf("║  HELHEIM ENGINE 2D v2.0  (Pro Edition)║\n");
-    printf("╠════════════════════════════════════════╣\n");
-    printf("║ Score: %-30d ║\n", score);
-    printf("║ Health: %-24d / %3d ║\n", health, maxHealth);
-    printf("║ Stars: %d / %d                         ║\n", starsCollected, totalStars);
-    printf("║ Level Time: %d seconds              ║\n", levelTime);
-    
-    if (inventoryCount > 0) {
-        printf("║ Inventory: ");
-        for (int i = 0; i < inventoryCount && i < 3; i++) {
-            printf("%s(%d) ", inventory[i].name, inventory[i].quantity);
-        }
-        printf("                 ║\n");
+    // Only redraw if values changed (and only draw changed parts)
+    if (lastDisplayedScore != score) {
+        SetCursorPosition(8, HEIGHT + 4);
+        printf("%-30d", score);
+        lastDisplayedScore = score;
     }
     
-    printf("╠════════════════════════════════════════╣\n");
-    printf("║ W/A/S/D=Move | Space=Special | Q=Quit  ║\n");
-    printf("║ P=Pause | Diff: %s              ║\n",
-           gameConfig.difficulty == DIFFICULTY_EASY ? "EASY  " :
-           gameConfig.difficulty == DIFFICULTY_NORMAL ? "NORMAL" : "HARD  ");
-    printf("╚════════════════════════════════════════╝\n");
+    if (lastDisplayedHealth != health) {
+        SetCursorPosition(8, HEIGHT + 5);
+        printf("%-24d / %3d", health, maxHealth);
+        lastDisplayedHealth = health;
+    }
+    
+    if (lastDisplayedStars != starsCollected) {
+        SetCursorPosition(8, HEIGHT + 6);
+        printf("%d / %d", starsCollected, totalStars);
+        lastDisplayedStars = starsCollected;
+    }
+    
+    if (lastDisplayedTime != levelTime) {
+        SetCursorPosition(8, HEIGHT + 7);
+        printf("%d seconds", levelTime);
+        lastDisplayedTime = levelTime;
+    }
 }
 
 void DrawGame() {
-    system("cls");
+    static int uiDrawn = 0;
     
-    // Draw map and entities
+    // Clear screen and draw UI frame on first call
+    if (!screenCleared) {
+        system("cls");
+        screenCleared = 1;
+        uiDrawn = 0;
+        // Initialize previous buffer
+        for (int y = 0; y < HEIGHT; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                prevScreenBuffer[y][x] = 0;
+            }
+        }
+    }
+    
+    // Draw UI border/frame once
+    if (!uiDrawn) {
+        SetCursorPosition(0, HEIGHT + 1);
+        printf("╔════════════════════════════════════════╗");
+        SetCursorPosition(0, HEIGHT + 2);
+        printf("║           HELHEIM ENGINE 2D v2.0       ║");
+        SetCursorPosition(0, HEIGHT + 3);
+        printf("╠════════════════════════════════════════╣");
+        SetCursorPosition(0, HEIGHT + 4);
+        printf("║ Score:                                  ║");
+        SetCursorPosition(0, HEIGHT + 5);
+        printf("║ Health:                                 ║");
+        SetCursorPosition(0, HEIGHT + 6);
+        printf("║ Stars:                                  ║");
+        SetCursorPosition(0, HEIGHT + 7);
+        printf("║ Level Time:                             ║");
+        SetCursorPosition(0, HEIGHT + 8);
+        printf("╠════════════════════════════════════════╣");
+        SetCursorPosition(0, HEIGHT + 9);
+        printf("║ W/A/S/D=Move | Space=Special | Q=Quit  ║");
+        SetCursorPosition(0, HEIGHT + 10);
+        printf("║ P=Pause | Diff: NORMAL              ║");
+        SetCursorPosition(0, HEIGHT + 11);
+        printf("╚════════════════════════════════════════╝");
+        uiDrawn = 1;
+    }
+    
+    // Build current frame buffer
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
             int drawn = 0;
             
-            // Draw entities in order
+            // Check entities first
             for (int i = 0; i < entityCount; i++) {
                 Entity* e = &entities[i];
                 if (e->active && (int)e->position.x == x && (int)e->position.y == y) {
-                    printf("%c", e->displayChar);
+                    screenBuffer[y][x] = e->displayChar;
                     drawn = 1;
                     break;
                 }
             }
             
             if (!drawn) {
-                printf("%c", map[y][x]);
+                screenBuffer[y][x] = map[y][x];
             }
         }
-        printf("\n");
     }
     
+    // Only update changed cells
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            if (screenBuffer[y][x] != prevScreenBuffer[y][x]) {
+                SetCursorPosition(x, y);
+                printf("%c", screenBuffer[y][x]);
+                prevScreenBuffer[y][x] = screenBuffer[y][x];
+            }
+        }
+    }
+    
+    // Draw UI at fixed position
     DrawGameUI();
     
     if (gameState == STATE_PAUSED) {
-        printf("\n                    *** GAME PAUSED ***\n");
-        printf("                  Press P to resume\n");
+        SetCursorPosition(5, HEIGHT + 12);
+        printf("*** PAUSED ***");
     }
+    fflush(stdout);
 }
 
 void DrawDebugInfo() {
     if (gameConfig.showDebugInfo) {
-        printf("\n[DEBUG] Entities: %d | Particles: %d | EntityCount: %d\n",
-               entityCount, particleCount, entityCount);
+        SetCursorPosition(0, HEIGHT + 14);
+        printf("[DEBUG] Entities: %d | Particles: %d            ", entityCount, particleCount);
     }
 }
 
@@ -628,6 +695,37 @@ long long GetCurrentTimeMS() {
     if (frequency.QuadPart == 0) QueryPerformanceFrequency(&frequency);
     QueryPerformanceCounter(&currentTime);
     return (long long)((currentTime.QuadPart * 1000) / frequency.QuadPart);
+}
+
+// ===== CONSOLE RENDERING =====
+
+void SetCursorPosition(int x, int y) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD coord = {(SHORT)x, (SHORT)y};
+    SetConsoleCursorPosition(hConsole, coord);
+}
+
+void HideCursor() {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO info;
+    info.dwSize = 100;
+    info.bVisible = FALSE;
+    SetConsoleCursorInfo(hConsole, &info);
+}
+
+void InitializeScreenBuffers() {
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            screenBuffer[y][x] = '.';
+            prevScreenBuffer[y][x] = ' ';
+        }
+    }
+    consoleInitialized = 1;
+}
+
+void ClearGameScreen() {
+    system("cls");
+    screenCleared = 1;
 }
 
 // ===== PLAYER MOVEMENT & INPUT =====
@@ -738,9 +836,15 @@ void PlayCurrentLevel() {
     starsCollected = 0;
     levelTime = 0;
     gameState = STATE_PLAYING;
+    screenCleared = 0;  // Reset screen clear flag
+    lastDisplayedScore = -1;
+    lastDisplayedHealth = -1;
+    lastDisplayedStars = -1;
+    lastDisplayedTime = -1;
     
     long long lastUpdateTime = GetCurrentTimeMS();
     int frameCounter = 0;
+    int uiInitialized = 0;
     
     while (gameState == STATE_PLAYING || gameState == STATE_PAUSED) {
         long long currentTime = GetCurrentTimeMS();
@@ -1159,6 +1263,10 @@ int main() {
     // Enable UTF-8 support in Windows console
     SetConsoleCP(65001);
     SetConsoleOutputCP(65001);
+    
+    // Initialize rendering system
+    HideCursor();
+    InitializeScreenBuffers();
     
     srand((unsigned)time(NULL));
     
