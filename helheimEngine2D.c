@@ -571,26 +571,26 @@ void LoadDefaultLevel() {
 void DrawGameUI() {
     // Only redraw if values changed (and only draw changed parts)
     if (lastDisplayedScore != score) {
-        SetCursorPosition(8, HEIGHT + 4);
-        printf("%-30d", score);
+        SetCursorPosition(9, HEIGHT + 4);
+        printf("%-33d", score);
         lastDisplayedScore = score;
     }
     
     if (lastDisplayedHealth != health) {
-        SetCursorPosition(8, HEIGHT + 5);
-        printf("%-24d / %3d", health, maxHealth);
+        SetCursorPosition(9, HEIGHT + 5);
+        printf("%-31d / %3d", health, maxHealth);
         lastDisplayedHealth = health;
     }
     
     if (lastDisplayedStars != starsCollected) {
-        SetCursorPosition(8, HEIGHT + 6);
-        printf("%d / %d", starsCollected, totalStars);
+        SetCursorPosition(9, HEIGHT + 6);
+        printf("%d / %-28d", starsCollected, totalStars);
         lastDisplayedStars = starsCollected;
     }
     
     if (lastDisplayedTime != levelTime) {
-        SetCursorPosition(8, HEIGHT + 7);
-        printf("%d seconds", levelTime);
+        SetCursorPosition(9, HEIGHT + 7);
+        printf("%-32d seconds", levelTime);
         lastDisplayedTime = levelTime;
     }
 }
@@ -632,7 +632,7 @@ void DrawGame() {
         SetCursorPosition(0, HEIGHT + 9);
         printf("║ W/A/S/D=Move | Space=Special | Q=Quit  ║");
         SetCursorPosition(0, HEIGHT + 10);
-        printf("║ P=Pause | Diff: NORMAL              ║");
+        printf("║ P=Pause | Diff: NORMAL                ║");
         SetCursorPosition(0, HEIGHT + 11);
         printf("╚════════════════════════════════════════╝");
         uiDrawn = 1;
@@ -674,7 +674,7 @@ void DrawGame() {
     DrawGameUI();
     
     if (gameState == STATE_PAUSED) {
-        SetCursorPosition(5, HEIGHT + 12);
+        SetCursorPosition(6, HEIGHT + 12);
         printf("*** PAUSED ***");
     }
     fflush(stdout);
