@@ -750,6 +750,7 @@ int MovePlayerTo(int newX, int newY) {
             score += e->collectibleValue;
             starsCollected++;
             e->active = 0;
+            map[newY][newX] = '.';  // Clear from map
             
             if (gameConfig.enableParticles) {
                 for (int p = 0; p < 5; p++) {
