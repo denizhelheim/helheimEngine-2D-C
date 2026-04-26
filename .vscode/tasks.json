@@ -7,9 +7,21 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${file}",
+                "helheimEngine2D.c",
+                "globals.c",
+                "entity.c",
+                "particle.c",
+                "inventory.c",
+                "collision.c",
+                "tile.c",
+                "rendering.c",
+                "input.c",
+                "gameplay.c",
+                "menu.c",
+                "utils.c",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "HelheimEngine2D.exe",
+                "-lm"
             ],
             "options": {
                 "cwd": "${fileDirname}"
