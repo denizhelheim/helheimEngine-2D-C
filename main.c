@@ -1,26 +1,12 @@
-﻿// ===== MODULAR HELHEIM ENGINE 2D =====
-// Main integration file - includes all modular components
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <windows.h>
-
-// ===== INCLUDE ALL MODULES =====
-#include "types.h"
 #include "globals.h"
-#include "entity.h"
-#include "particle.h"
-#include "collision.h"
-#include "tile.h"
-#include "inventory.h"
 #include "rendering.h"
-#include "input.h"
+#include "tile.h"
 #include "gameplay.h"
 #include "menu.h"
-#include "utils.h"
-
-// ===== MAIN GAME ENTRY POINT =====
 
 int main() {
     // Enable UTF-8 support in Windows console
