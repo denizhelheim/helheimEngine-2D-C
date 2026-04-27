@@ -3,6 +3,8 @@
 #include "globals.h"
 
 int AddToInventory(const char* itemName, int quantity, int effect) {
+    if (!itemName) return 0;
+    
     // Check if item already exists
     for (int i = 0; i < inventoryCount; i++) {
         if (strcmp(inventory[i].name, itemName) == 0) {
@@ -13,7 +15,8 @@ int AddToInventory(const char* itemName, int quantity, int effect) {
     
     // Add new item
     if (inventoryCount < MAX_INVENTORY) {
-        strcpy(inventory[inventoryCount].name, itemName);
+        strncpy(inventory[inventoryCount].name, itemName, 31);
+        inventory[inventoryCount].name[31] = '\0';  // Ensure null termination
         inventory[inventoryCount].quantity = quantity;
         inventory[inventoryCount].effect = effect;
         inventoryCount++;

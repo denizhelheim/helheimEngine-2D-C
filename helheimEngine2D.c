@@ -1,4 +1,4 @@
-﻿// ===== MODULAR HELHEIM ENGINE 2D =====
+﻿// ===== HELHEIM ENGINE 2D =====
 // Main integration file - includes all modular components
 
 #include <stdio.h>

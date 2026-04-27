@@ -68,13 +68,17 @@ void InitializeDefaultMap() {
     SetTile(WIDTH - 2, HEIGHT - 2, TILE_EXIT);
     map[HEIGHT - 2][WIDTH - 2] = 'E';
     
-    // Spawn some collectibles
-    for (int i = 0; i < 5; i++) {
+    // Spawn some collectibles (avoid overlap with walls and exit)
+    int spawnedCount = 0;
+    int maxAttempts = 50;
+    while (spawnedCount < 5 && maxAttempts > 0) {
         int rx = 2 + rand() % (WIDTH - 4);
         int ry = 2 + rand() % (HEIGHT - 4);
-        if (map[ry][rx] == '.') {
+        if (map[ry][rx] == '.' && tileMap[ry][rx].type == TILE_EMPTY) {
             map[ry][rx] = '*';
             totalStars++;
+            spawnedCount++;
         }
+        maxAttempts--;
     }
 }

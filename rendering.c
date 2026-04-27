@@ -118,6 +118,17 @@ void RenderGame() {
                 }
             }
             
+            // Check particles if nothing drawn
+            if (!drawn) {
+                for (int i = 0; i < particleCount; i++) {
+                    if (particles[i].active && (int)particles[i].position.x == x && (int)particles[i].position.y == y) {
+                        screenBuffer[y][x] = particles[i].displayChar;
+                        drawn = 1;
+                        break;
+                    }
+                }
+            }
+            
             if (!drawn) {
                 screenBuffer[y][x] = map[y][x];
             }

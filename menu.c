@@ -154,18 +154,24 @@ void AdvancedLevelEditor() {
             
             // Entity mode
             case '!':  // Shift+1
-                if (editMode) {
+                if (editMode && entityCount < MAX_ENTITIES) {
                     Entity* star = CreateEntity(ENTITY_COLLECTIBLE, cursorX, cursorY, '*');
-                    star->collectibleValue = 10;
-                    map[cursorY][cursorX] = '*';
+                    if (star) {
+                        star->collectibleValue = 10;
+                        map[cursorY][cursorX] = '*';
+                    }
                 }
                 break;
             case '@':  // Shift+2
-                if (editMode) {
+                if (editMode && entityCount < MAX_ENTITIES) {
                     Entity* enemy = CreateEntity(ENTITY_ENEMY, cursorX, cursorY, 'G');
-                    enemy->health->health = 30;
-                    enemy->behavior->visionRange = 5;
-                    map[cursorY][cursorX] = 'G';
+                    if (enemy && enemy->behavior) {
+                        enemy->health->health = 30;
+                        enemy->behavior->visionRange = 5;
+                        enemy->behavior->state = 0;
+                        enemy->behavior->moveTimer = 0;
+                        map[cursorY][cursorX] = 'G';
+                    }
                 }
                 break;
             
@@ -220,16 +226,26 @@ void DifficultyMenu() {
         if (choice == '1') {
             gameConfig.difficulty = DIFFICULTY_EASY;
             maxHealth = 150;
+            // Sync current health if game is running
+            if (gameState == STATE_PLAYING && health > maxHealth) {
+                health = maxHealth;
+            }
             return;
         }
         else if (choice == '2') {
             gameConfig.difficulty = DIFFICULTY_NORMAL;
             maxHealth = 100;
+            if (gameState == STATE_PLAYING && health > maxHealth) {
+                health = maxHealth;
+            }
             return;
         }
         else if (choice == '3') {
             gameConfig.difficulty = DIFFICULTY_HARD;
             maxHealth = 50;
+            if (gameState == STATE_PLAYING && health > maxHealth) {
+                health = maxHealth;
+            }
             return;
         }
         else if (choice == 'q' || choice == 'Q') {

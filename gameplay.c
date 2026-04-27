@@ -27,6 +27,7 @@ void LoadDefaultLevel() {
     }
     entityCount = 0;
     particleCount = 0;
+    player = NULL;  // Reset player pointer
     
     // Load map
     InitializeDefaultMap();
@@ -38,13 +39,45 @@ void LoadDefaultLevel() {
         map[defaultPlayerY][defaultPlayerX] = 'P';
     }
     
-    // Add some enemies
+    // Create collectible entities from map
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            if (map[y][x] == '*') {
+                Entity* collectible = CreateEntity(ENTITY_COLLECTIBLE, x, y, '*');
+                if (collectible) {
+                    collectible->collectibleValue = 10;
+                }
+            }
+        }
+    }
+    
+    // Add some enemies at safe spawn points to avoid overlap
     for (int i = 0; i < 3; i++) {
-        Entity* enemy = CreateEntity(ENTITY_ENEMY, 5 + i * 3, 5, 'G');
-        if (enemy) {
-            enemy->health->health = 30;
-            enemy->behavior->visionRange = 5;
-            map[5][5 + i * 3] = 'G';
+        int spawnX, spawnY;
+        
+        // Create diverse spawn points
+        if (i == 0) {
+            spawnX = 2;
+            spawnY = 2;
+        } else if (i == 1) {
+            spawnX = WIDTH - 3;
+            spawnY = 2;
+        } else {
+            spawnX = WIDTH / 2;
+            spawnY = HEIGHT - 3;
+        }
+        
+        // Avoid spawning on player, walls, or collectibles
+        if (map[spawnY][spawnX] != '#' && map[spawnY][spawnX] != 'P' && map[spawnY][spawnX] != '*') {
+            Entity* enemy = CreateEntity(ENTITY_ENEMY, spawnX, spawnY, 'G');
+            if (enemy && enemy->behavior && enemy->health) {
+                enemy->health->health = 30;
+                enemy->behavior->visionRange = 5;
+                enemy->behavior->state = 0;  // Idle state
+                enemy->behavior->moveTimer = 0;
+                enemy->behavior->moveDirection = 0;
+                map[spawnY][spawnX] = 'G';
+            }
         }
     }
 }
@@ -100,14 +133,14 @@ void ShowGameOverScreen() {
     if (won) {
         printf("╔════════════════════════════════════════╗\n");
         printf("║         *** YOU WIN! ***              ║\n");
-        printf("║  Final Score: %-24d║\n", score);
+        printf("║  Final Score: %-25d║\n", score);
         printf("║  Level Time: %d seconds             ║\n", levelTime);
         printf("║  Total Stars: %d / %d                ║\n", starsCollected, totalStars);
         printf("╚════════════════════════════════════════╝\n");
     } else {
         printf("╔════════════════════════════════════════╗\n");
         printf("║      *** GAME OVER ***               ║\n");
-        printf("║  Final Score: %-24d║\n", score);
+        printf("║  Final Score: %-25d║\n", score);
         printf("║  You ran out of health!              ║\n");
         printf("╚════════════════════════════════════════╝\n");
     }
